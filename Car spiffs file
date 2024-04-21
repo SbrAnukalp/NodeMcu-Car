@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NodeMCU Car Controller</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
 
+    .container {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #joystick {
+      width: 150px;
+      height: 150px;
+      background-color: #ccc;
+      border-radius: 50%;
+      display: inline-block;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    #joystick-handle {
+      width: 40px;
+      height: 40px;
+      background-color: #333;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    .button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+
+    .led-on {
+      background-color: #f44336;
+    }
+
+    .led-off {
+      background-color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NodeMCU Car Controller</h1>
+    <div id="joystick" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd()">
+      <div id="joystick-handle"></div>
+    </div>
+    <div class="button-container">
+      <button class="button" onclick="move('forward')">⬆️ Forward</button>
+      <br>
+      <button class="button" onclick="move('left')">⬅️ Left</button>
+      <button class="button" onclick="move('brake')">🛑 Brake</button>
+      <button class="button" onclick="move('right')">➡️ Right</button>
+      <br>
+      <button class="button" onclick="move('backward')">⬇️ Backward</button>
+      <br>
+      <button class="button led-on" onclick="toggleLED('on')">💡 LED On</button>
+      <button class="button led-off" onclick="toggleLED('off')">🚫 LED Off</button>
+    </div>
+  </div>
+
+  <script>
+    function move(direction) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/" + direction, true);
+      xhr.send();
+    }
+
+    function toggleLED(state) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/led/" + state, true);
+      xhr.send();
+    }
+
+    function handleTouchStart(event) {
+      event.preventDefault();
+      handleTouchMove(event);
+    }
+
+    function handleTouchMove(event) {
+      var touch = event.touches[0];
+      var joystick = document.getElementById('joystick');
+      var boundingRect = joystick.getBoundingClientRect();
+      var posX = touch.clientX - boundingRect.left;
+      var posY = touch.clientY - boundingRect.top;
+      var maxX = joystick.offsetWidth;
+      var maxY = joystick.offsetHeight;
+      var percentX = (posX / maxX) * 100;
+      var percentY = (posY / maxY) * 100;
+      document.getElementById('joystick-handle').style.left = posX + 'px';
+      document.getElementById('joystick-handle').style.top = posY + 'px';
+      moveJoystick(percentX, percentY);
+    }
+
+    function handleTouchEnd() {
+      document.getElementById('joystick-handle').style.left = '50%';
+      document.getElementById('joystick-handle').style.top = '50%';
+      moveJoystick(50, 50); // Center position
+    }
+
+    function moveJoystick(posX, posY) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/joystick?x=" + posX + "&y=" + posY, true);
+      xhr.send();
+    }
+  </script>
+</body>
+</html>
